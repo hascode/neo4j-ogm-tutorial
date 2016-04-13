@@ -2,18 +2,13 @@ package com.hascode.tutorial.boundary;
 
 import java.util.Collections;
 
-import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 
 import com.hascode.tutorial.entity.TrainStation;
 
-public class TrainTimetableService {
+public class TrainTimetableExample {
 	public static void main(String[] args) {
-		final String from = "London";
-		final String destination = "Bristol";
-
-		System.out.println("searching for the shortest route from " + from + " to " + destination + "..");
 
 		SessionFactory sessionFactory = new SessionFactory("com.hascode");
 		final Session session = sessionFactory.openSession("http://localhost:7474");
@@ -48,16 +43,19 @@ public class TrainTimetableService {
 		session.save(southampton);
 
 		System.out.println(session.countEntitiesOfType(TrainStation.class) + " stations saved");
+		getRoute("London", "Bristol", session);
+		getRoute("London", "Southampton", session);
+	}
 
-		final Iterable<WeightedPath> paths = session.query(WeightedPath.class,
+	private static void getRoute(final String from, final String destination, final Session session) {
+		System.out.println("searching for the shortest route from " + from + " to " + destination + "..");
+		final Iterable<TrainStation> stops = session.query(TrainStation.class,
 				"MATCH (from:TrainStation {name:'" + from + "'}), (to:TrainStation {name:'" + destination
 						+ "'}), path=shortestPath((from)-[:LEADS_TO*]->(to)) RETURN path",
 				Collections.<String, TrainStation> emptyMap());
-		paths.forEach((path) -> {
-			System.out.println("PATH " + path.weight());
-			path.nodes().forEach((node) -> {
-				System.out.println(node.getProperty("name"));
-			});
+		System.out.println("shortest way from " + from + " to " + destination + " via");
+		stops.forEach((stop) -> {
+			System.out.println(stop.getName());
 		});
 	}
 }
