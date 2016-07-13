@@ -15,18 +15,11 @@ repositories {
 }
 
 dependencies {
-   compile 'org.neo4j:neo4j-ogm-core:2.0.3'
+    compile 'org.neo4j:neo4j-ogm-core:2.0.3'
     compile 'org.neo4j:neo4j-ogm-embedded-driver:2.0.3'
 }
 
-test {
-    systemProperties 'property': 'value'
-}
-
-uploadArchives {
-    repositories {
-       flatDir {
-           dirs 'repos'
-       }
-    }
+task execute(type:JavaExec) {
+    main = mainClass
+    classpath = sourceSets.main.runtimeClasspath
 }
