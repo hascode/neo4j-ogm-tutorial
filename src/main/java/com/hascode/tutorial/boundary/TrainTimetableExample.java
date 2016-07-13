@@ -48,12 +48,12 @@ public class TrainTimetableExample {
     }
 
     private static void getRoute(final String from, final String destination, final Session session) {
-        System.out.println("searching for the shortest route from " + from + " to " + destination + "..");
+        System.out.printf("searching for the shortest route from %s to %s..\n", from, destination);
         final Iterable<TrainStation> stops = session.query(TrainStation.class,
                 "MATCH (from:TrainStation {name:'" + from + "'}), (to:TrainStation {name:'" + destination
                         + "'}), path=shortestPath((from)-[:LEADS_TO*]->(to)) RETURN path",
                 Collections.<String, TrainStation> emptyMap());
-        System.out.println("shortest way from " + from + " to " + destination + " via");
+        System.out.printf("shortest way from %s to %s via\n", from, destination);
         stops.forEach((stop) -> {
             System.out.println(stop.getName());
         });

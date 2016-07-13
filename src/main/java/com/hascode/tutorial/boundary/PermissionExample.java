@@ -60,12 +60,13 @@ public class PermissionExample {
         fetchPermissionFor(session, "Fred");
         fetchPermissionFor(session, "Sally");
         fetchPermissionFor(session, "Lisa");
+
     }
 
     private static void fetchPermissionFor(final Session session, String name) {
-        System.out.println("fetching permissions for " + name + ": ");
-        session.query(Permission.class, "MATCH (u:User{name:'" + name + "'})-[*]->(p:Permission) RETURN p",
-                Collections.emptyMap()).forEach(System.out::println);
+        System.out.printf("fetching permissions for %s: \n", name);
+        String cypherQuery = String.format("MATCH (u:User{name:'%s'})-[*]->(p:Permission) RETURN p", name);
+        session.query(Permission.class, cypherQuery, Collections.emptyMap()).forEach(System.out::println);
     }
 
 }
