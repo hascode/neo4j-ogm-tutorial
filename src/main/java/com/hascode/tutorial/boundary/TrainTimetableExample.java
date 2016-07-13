@@ -2,8 +2,11 @@ package com.hascode.tutorial.boundary;
 
 import java.util.Collections;
 
+import org.neo4j.graphdb.Path;
+import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
+import org.neo4j.ogm.transaction.Transaction;
 
 import com.hascode.tutorial.entity.TrainStation;
 
@@ -12,6 +15,7 @@ public class TrainTimetableExample {
 
         SessionFactory sessionFactory = new SessionFactory("com.hascode");
         final Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
 
         TrainStation london = new TrainStation("London");
         TrainStation brighton = new TrainStation("Brighton");
@@ -45,17 +49,25 @@ public class TrainTimetableExample {
         System.out.println(session.countEntitiesOfType(TrainStation.class) + " stations saved");
         getRoute("London", "Bristol", session);
         getRoute("London", "Southampton", session);
+
+        tx.close();
     }
 
     private static void getRoute(final String from, final String destination, final Session session) {
         System.out.printf("searching for the shortest route from %s to %s..\n", from, destination);
-        final Iterable<TrainStation> stops = session.query(TrainStation.class,
-                "MATCH (from:TrainStation {name:'" + from + "'}), (to:TrainStation {name:'" + destination
-                        + "'}), path=shortestPath((from)-[:LEADS_TO*]->(to)) RETURN path",
-                Collections.<String, TrainStation> emptyMap());
+
+        String cypherQuery = String.format(
+                "MATCH (from:TrainStation {name:'%s'}), (to:TrainStation {name:'%s'}), paths=allShortestPaths((from)-[:LEADS_TO*]->(to)) WITH REDUCE(dist = 0, rel in rels(paths) | dist + rel.distance) AS distance, paths RETURN paths, distance ORDER BY distance LIMIT 1",
+                from, destination);
+        final Result result = session.query(cypherQuery, Collections.emptyMap());
         System.out.printf("shortest way from %s to %s via\n", from, destination);
-        stops.forEach((stop) -> {
-            System.out.println(stop.getName());
+        result.queryResults().forEach(entry -> {
+            Long distance = (Long) entry.get("distance");
+            Path path = (Path) entry.get("paths");
+            System.out.printf("distance: %s\n", distance);
+            path.nodes().forEach(node -> {
+                System.out.printf("- %s\n", node.getProperty("name"));
+            });
         });
     }
 }
